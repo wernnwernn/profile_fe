@@ -16,7 +16,6 @@ import {
 const emptyExperience = {
   company_name: "",
   title: "",
-  employment_type: "",
   location: "",
   start_date: "",
   end_date: "",
@@ -54,17 +53,18 @@ export default function AdminExperiences() {
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   };
 
-  const addNew = async () => {
-    setSaving(true);
-    try {
-      const row = await createExperience({ ...emptyExperience, start_date: new Date().toISOString().slice(0, 10) });
-      setItems((prev) => [...prev, { ...row, highlights: [] }]);
-      setAlert({ variant: "success", message: "เพิ่มแล้ว" });
-    } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "เพิ่มไม่สำเร็จ" });
-    } finally {
-      setSaving(false);
-    }
+  const addNew = () => {
+    const tempId = `temp-${Date.now()}`;
+    setItems((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        ...emptyExperience,
+        start_date: new Date().toISOString().slice(0, 10),
+        highlights: [],
+        _isNew: true,
+      },
+    ]);
   };
 
   const saveExperience = async (row) => {
@@ -77,16 +77,29 @@ export default function AdminExperiences() {
       const payload = {
         company_name: row.company_name,
         title: row.title,
-        employment_type: row.employment_type,
         location: row.location,
         start_date: row.start_date,
         end_date: row.end_date || null,
         is_current: !!row.is_current,
         description_md: row.description_md,
       };
-      const updated = await updateExperience(row.id, payload);
-      setItems((prev) => prev.map((x) => (x.id === row.id ? { ...updated, highlights: x.highlights || [] } : x)));
-      setAlert({ variant: "success", message: "บันทึกแล้ว" });
+      if (row._isNew) {
+        const created = await createExperience(payload);
+        setItems((prev) =>
+          prev.map((x) =>
+            x.id === row.id ? { ...created, highlights: x.highlights || [] } : x
+          )
+        );
+        setAlert({ variant: "success", message: "เพิ่มแล้ว" });
+      } else {
+        const updated = await updateExperience(row.id, payload);
+        setItems((prev) =>
+          prev.map((x) =>
+            x.id === row.id ? { ...updated, highlights: x.highlights || [] } : x
+          )
+        );
+        setAlert({ variant: "success", message: "บันทึกแล้ว" });
+      }
     } catch (e) {
       setAlert({ variant: "danger", message: getErrMsg(e) || "บันทึกไม่สำเร็จ" });
     } finally {
@@ -95,7 +108,14 @@ export default function AdminExperiences() {
   };
 
   const removeExperience = async (id) => {
-    if (!window.confirm("ลบ experience นี้?") ) return;
+    const row = items.find((x) => x.id === id);
+    if (!row) return;
+
+    if (row._isNew) {
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      return;
+    }
+    if (!window.confirm("ลบ experience นี้?")) return;
     setSaving(true);
     try {
       await deleteExperience(id);
@@ -114,6 +134,7 @@ export default function AdminExperiences() {
     if (idx < 0) return;
     const next = idx + dir;
     if (next < 0 || next >= arr.length) return;
+    if (arr[idx]._isNew || arr[next]._isNew) return;
     const tmp = arr[idx];
     arr[idx] = arr[next];
     arr[next] = tmp;
@@ -165,7 +186,7 @@ export default function AdminExperiences() {
   };
 
   const removeHighlight = async (experience_id, highlight_id) => {
-    if (!window.confirm("ลบ highlight นี้?") ) return;
+    if (!window.confirm("ลบ highlight นี้?")) return;
     setSaving(true);
     try {
       await deleteHighlight(highlight_id);
@@ -212,9 +233,9 @@ export default function AdminExperiences() {
       prev.map((x) =>
         x.id === experience_id
           ? {
-              ...x,
-              highlights: (x.highlights || []).map((h) => (h.id === highlight_id ? { ...h, text } : h)),
-            }
+            ...x,
+            highlights: (x.highlights || []).map((h) => (h.id === highlight_id ? { ...h, text } : h)),
+          }
           : x
       )
     );
@@ -266,11 +287,7 @@ export default function AdminExperiences() {
                       <Form.Label className="small">title</Form.Label>
                       <Form.Control value={row.title || ""} onChange={(e) => onChange(row.id, { title: e.target.value })} />
                     </Col>
-                    <Col md={4}>
-                      <Form.Label className="small">employment_type</Form.Label>
-                      <Form.Control value={row.employment_type || ""} onChange={(e) => onChange(row.id, { employment_type: e.target.value })} />
-                    </Col>
-                    <Col md={4}>
+                    <Col md={12}>
                       <Form.Label className="small">location</Form.Label>
                       <Form.Control value={row.location || ""} onChange={(e) => onChange(row.id, { location: e.target.value })} />
                     </Col>

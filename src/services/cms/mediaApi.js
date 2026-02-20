@@ -1,4 +1,6 @@
 import api from "../api";
+import { getToken } from "../tokenStorage";
+const BASE_URL = process.env.REACT_APP_API_BASE || "";
 
 export const uploadMedia = async (file, alt_text = "") => {
   const form = new FormData();
@@ -21,4 +23,25 @@ export const deleteMedia = async (id) => {
   return res.data;
 };
 
-export const mediaUrl = (id) => `/api/media/${id}`;
+export const refreshMediaCache = async () => {
+  const res = await api.post("/media/cache/refresh");
+  return res.data;
+};
+
+export const mediaUrl = (id) => `${BASE_URL}/api/media/${id}`;
+
+export const fetchMediaBlobUrl = async (id) => {
+  const token = getToken();
+  const res = await fetch(mediaUrl(id), {
+    method: "GET",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`โหลดไฟล์ไม่สำเร็จ (${res.status}) ${t}`);
+  }
+
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+};

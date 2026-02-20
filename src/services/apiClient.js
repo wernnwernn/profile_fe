@@ -1,8 +1,11 @@
+import axios from "axios";
 import { getToken, clearToken } from "./tokenStorage";
 
 const API_BASE = process.env.REACT_APP_API_BASE || "";
+
 export const apiFetch = async (path, options = {}) => {
   const token = getToken();
+
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -10,21 +13,39 @@ export const apiFetch = async (path, options = {}) => {
 
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  try {
+    const axiosConfig = {
+      url: `${API_BASE}${path}`,
+      method: options.method || "GET",
+      headers,
+    };
 
-  // ถ้า token หมดอายุ
-  if (res.status === 401) {
-    clearToken();
-  }
+    if (options.body !== undefined) {
+      let data = options.body;
+      if (typeof data === "string") {
+        try {
+          data = JSON.parse(data);
+        } catch {
+        }
+      }
+      axiosConfig.data = data;
+    }
 
-  const text = await res.text();
-  let json = null;
-  try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+    const res = await axios(axiosConfig);
+    return res.data ?? null;
+  } catch (err) {
+    const status = err?.response?.status;
 
-  if (!res.ok) {
-    const msg = json?.error || json?.message || `HTTP_${res.status}`;
+    if (status === 401) {
+      clearToken();
+    }
+
+    const msg =
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      (status ? `HTTP_${status}` : "Request failed");
+
     throw new Error(msg);
   }
-
-  return json;
 };

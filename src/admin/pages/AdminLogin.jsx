@@ -5,23 +5,23 @@ import api, { getErrMsg } from "../../services/api";
 import { setToken } from "../../services/tokenStorage";
 
 export default function AdminLogin() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  const emailTrimmed = useMemo(() => String(form.email || "").trim(), [form.email]);
+  const usernameTrimmed = useMemo(() => String(form.username || "").trim(), [form.username]);
 
   const submit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
 
-    if (!emailTrimmed) return setErrorMsg("กรุณากรอกอีเมล");
+    if (!usernameTrimmed) return setErrorMsg("กรุณากรอก Username");
     if (!form.password) return setErrorMsg("กรุณากรอกรหัสผ่าน");
 
     try {
       setSubmitting(true);
-      const res = await api.post("/auth/login", { email: emailTrimmed, password: form.password });
+      const res = await api.post("/auth/login", { username: usernameTrimmed, password: form.password });
       setToken(res.data.token);
       navigate("/admin/profile", { replace: true });
     } catch (err) {
@@ -41,9 +41,9 @@ export default function AdminLogin() {
 
           <Form onSubmit={submit} className="d-grid gap-2">
             <Form.Control
-              placeholder="email"
-              value={form.email}
-              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              placeholder="username"
+              value={form.username}
+              onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
             />
             <Form.Control
               placeholder="password"

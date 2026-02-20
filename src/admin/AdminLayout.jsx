@@ -1,12 +1,22 @@
-import React, { useContext } from "react";
+import React, { useEffect } from "react";
 import { Container, Nav, Navbar, Button } from "react-bootstrap";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { ThemeContext } from "../theme/ThemeProvider";
 import { clearToken } from "../services/tokenStorage";
+import "./admin.css";
 
 export default function AdminLayout() {
-  const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+    document.body.style.backgroundColor = "#101214";
+    document.body.style.color = "#d1d5db";
+    return () => {
+      document.documentElement.setAttribute("data-bs-theme", "light");
+      document.body.style.backgroundColor = "";
+      document.body.style.color = "";
+    };
+  }, []);
 
   const logout = () => {
     clearToken();
@@ -47,15 +57,14 @@ export default function AdminLayout() {
           <Nav.Link as={NavLink} to="/admin/media" className="btn btn-outline-secondary text-start">
             Media
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/admin/users" className="btn btn-outline-secondary text-start">
+            Users
+          </Nav.Link>
         </Nav>
 
-        <hr />
 
-        <Button variant="outline-primary" className="w-100 mb-2" onClick={toggleTheme}>
-          โหมด: {theme === "dark" ? "มืด" : "สว่าง"}
-        </Button>
 
-        <Button variant="outline-danger" className="w-100" onClick={logout}>
+        <Button variant="outline-danger" className="w-100 mt-3" onClick={logout}>
           ออกจากระบบ
         </Button>
       </div>
@@ -65,9 +74,6 @@ export default function AdminLayout() {
         <Navbar className="border-bottom">
           <Container fluid className="px-4">
             <Navbar.Brand className="fw-semibold">Admin</Navbar.Brand>
-            <div className="text-secondary" style={{ fontSize: 13 }}>
-              Theme: {theme}
-            </div>
           </Container>
         </Navbar>
 

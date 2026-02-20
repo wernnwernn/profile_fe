@@ -1,7 +1,8 @@
 import axios from "axios";
 import { getToken, clearToken } from "./tokenStorage";
-const API_BASE = process.env.REACT_APP_API_BASE || "";
 
+// frontend เรียก /api/... โดยตรง แล้วให้ dev proxy ไปยัง API_BASE จาก .env
+const API_BASE = process.env.REACT_APP_API_BASE || "";
 const api = axios.create({
   baseURL: API_BASE + "/api",
   timeout: 60_000,

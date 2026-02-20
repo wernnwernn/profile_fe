@@ -38,17 +38,20 @@ export default function AdminCertificates() {
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   };
 
-  const addNew = async () => {
-    setSaving(true);
-    try {
-      const row = await createCertificate({ name: "", issuer: "", issue_date: null, credential_url: "", media_id: null });
-      setItems((prev) => [...prev, row]);
-      setAlert({ variant: "success", message: "เพิ่มแล้ว" });
-    } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "เพิ่มไม่สำเร็จ" });
-    } finally {
-      setSaving(false);
-    }
+  const addNew = () => {
+    const tempId = `temp-${Date.now()}`;
+    setItems((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        name: "",
+        issuer: "",
+        issue_date: null,
+        credential_url: "",
+        media_id: null,
+        _isNew: true,
+      },
+    ]);
   };
 
   const saveRow = async (row) => {
@@ -62,9 +65,15 @@ export default function AdminCertificates() {
         credential_url: row.credential_url,
         media_id: row.media_id === "" || row.media_id === null || row.media_id === undefined ? null : Number(row.media_id),
       };
-      const updated = await updateCertificate(row.id, payload);
-      setItems((prev) => prev.map((x) => (x.id === row.id ? updated : x)));
-      setAlert({ variant: "success", message: "บันทึกแล้ว" });
+      if (row._isNew) {
+        const created = await createCertificate(payload);
+        setItems((prev) => prev.map((x) => (x.id === row.id ? created : x)));
+        setAlert({ variant: "success", message: "เพิ่มแล้ว" });
+      } else {
+        const updated = await updateCertificate(row.id, payload);
+        setItems((prev) => prev.map((x) => (x.id === row.id ? updated : x)));
+        setAlert({ variant: "success", message: "บันทึกแล้ว" });
+      }
     } catch (e) {
       setAlert({ variant: "danger", message: getErrMsg(e) || "บันทึกไม่สำเร็จ" });
     } finally {
@@ -73,6 +82,13 @@ export default function AdminCertificates() {
   };
 
   const removeRow = async (id) => {
+    const row = items.find((x) => x.id === id);
+    if (!row) return;
+
+    if (row._isNew) {
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      return;
+    }
     if (!window.confirm("ลบรายการนี้?") ) return;
     setSaving(true);
     try {
@@ -92,6 +108,7 @@ export default function AdminCertificates() {
     if (idx < 0) return;
     const next = idx + dir;
     if (next < 0 || next >= arr.length) return;
+    if (arr[idx]._isNew || arr[next]._isNew) return;
     const tmp = arr[idx];
     arr[idx] = arr[next];
     arr[next] = tmp;

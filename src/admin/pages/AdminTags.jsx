@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, Col, Form, Row, Spinner, Stack } from "react-bootstrap";
+import { Button, Card, Col, Form, Row, Spinner, Stack } from "react-bootstrap";
 import { getErrMsg } from "../../services/api";
 import { listTags, createTag, updateTag, deleteTag } from "../../services/cms/tagsApi";
+import { useNotify } from "../../ui/NotificationProvider";
 
 const slugify = (v) =>
   String(v || "")
@@ -16,42 +17,42 @@ export default function AdminTags() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState([]);
-  const [alert, setAlert] = useState(null);
+  const notify = useNotify();
 
   const sorted = useMemo(() => {
     return [...items].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")) || (a.id ?? 0) - (b.id ?? 0));
   }, [items]);
 
-  const fetchData = async () => {
+  const fetchData = useMemo(() => async () => {
     setLoading(true);
     try {
       setItems(await listTags());
     } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "โหลดข้อมูลไม่สำเร็จ" });
+      notify.error(getErrMsg(e) || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const onChange = (id, patch) => {
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   };
 
-  const addNew = async () => {
-    setSaving(true);
-    try {
-      const row = await createTag({ name: "", slug: "" });
-      setItems((prev) => [...prev, row]);
-      setAlert({ variant: "success", message: "เพิ่มแล้ว" });
-    } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "เพิ่มไม่สำเร็จ" });
-    } finally {
-      setSaving(false);
-    }
+  const addNew = () => {
+    const tempId = `temp-${Date.now()}`;
+    setItems((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        name: "",
+        slug: "",
+        _isNew: true,
+      },
+    ]);
   };
 
   const saveRow = async (row) => {
@@ -61,25 +62,38 @@ export default function AdminTags() {
       if (!name) throw new Error("กรุณากรอก name");
       const slug = String(row.slug || "").trim() || slugify(name);
 
-      const updated = await updateTag(row.id, { name, slug });
-      setItems((prev) => prev.map((x) => (x.id === row.id ? updated : x)));
-      setAlert({ variant: "success", message: "บันทึกแล้ว" });
+      if (row._isNew) {
+        const created = await createTag({ name, slug });
+        setItems((prev) => prev.map((x) => (x.id === row.id ? created : x)));
+        notify.success("เพิ่มแล้ว");
+      } else {
+        const updated = await updateTag(row.id, { name, slug });
+        setItems((prev) => prev.map((x) => (x.id === row.id ? updated : x)));
+        notify.success("บันทึกแล้ว");
+      }
     } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "บันทึกไม่สำเร็จ" });
+      notify.error(getErrMsg(e) || "บันทึกไม่สำเร็จ");
     } finally {
       setSaving(false);
     }
   };
 
   const removeRow = async (id) => {
-    if (!window.confirm("ลบ tag นี้?") ) return;
+    const row = items.find((x) => x.id === id);
+    if (!row) return;
+
+    if (row._isNew) {
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      return;
+    }
+    if (!window.confirm("ลบ tag นี้?")) return;
     setSaving(true);
     try {
       await deleteTag(id);
       setItems((prev) => prev.filter((x) => x.id !== id));
-      setAlert({ variant: "success", message: "ลบแล้ว" });
+      notify.success("ลบแล้ว");
     } catch (e) {
-      setAlert({ variant: "danger", message: getErrMsg(e) || "ลบไม่สำเร็จ" });
+      notify.error(getErrMsg(e) || "ลบไม่สำเร็จ");
     } finally {
       setSaving(false);
     }
@@ -94,12 +108,6 @@ export default function AdminTags() {
           {saving ? <Spinner size="sm" /> : "Add"}
         </Button>
       </Stack>
-
-      {alert ? (
-        <Alert variant={alert.variant} onClose={() => setAlert(null)} dismissible>
-          {alert.message}
-        </Alert>
-      ) : null}
 
       {loading ? (
         <div className="text-center py-5">
