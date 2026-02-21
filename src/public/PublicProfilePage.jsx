@@ -72,6 +72,11 @@ export default function PublicProfilePage({ isOwner = false }) {
 
   const profile = data?.profile || {};
 
+  useEffect(() => {
+    const name = data?.profile?.display_name?.trim();
+    if (name) document.title = name;
+  }, [data?.profile?.display_name]);
+
   const links = useMemo(() => {
     return (data?.links || [])
       .filter((x) => x?.is_active !== false)
