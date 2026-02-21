@@ -92,9 +92,37 @@ export default function HeroSection({ profile, primaryLinks, links }) {
                         {profile.tagline || ""}
                     </div>
 
-                    <h1 className="mt-1 mb-2 lofi-heading" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
+                    <h1
+                        className="mt-1 mb-2 lofi-heading"
+                        style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                    >
                         Hello, I&apos;m{" "}
-                        <span style={{ color: "#DF8976" }}>{profile.display_name || ""}</span>
+                        <motion.span
+                            style={{
+                                fontWeight: 900,
+                                lineHeight: 1.15,
+                                paddingTop: 2,
+                                paddingBottom: 6,
+                                display: "inline-block",
+
+                                backgroundImage:
+                                    "linear-gradient(90deg, #DF8976 0%, #E59A88 45%, #F2B07A 80%, #DF8976 100%)",
+                                backgroundSize: "220% 100%",
+                                backgroundPosition: "0% 50%",
+
+                                WebkitBackgroundClip: "text",
+                                backgroundClip: "text",
+                                color: "transparent",
+                                WebkitTextFillColor: "transparent",
+
+                                willChange: "background-position",
+                                transform: "translateZ(0)", // กันขอบตัวอักษรถูกตัดบางเครื่อง
+                            }}
+                            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                            {profile.display_name || ""}
+                        </motion.span>
                     </h1>
 
                     {profile.about_md && (
@@ -129,20 +157,6 @@ export default function HeroSection({ profile, primaryLinks, links }) {
                                 View Contacts
                             </motion.a>
                         )}
-
-                        {primaryLinks.map((l) => (
-                            <motion.a
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                key={l.id}
-                                className="lofi-button-primary"
-                                href={l.url}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {l.label || l.platform}
-                            </motion.a>
-                        ))}
                     </div>
                 </Col>
             </Row>

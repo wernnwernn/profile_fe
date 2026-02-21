@@ -108,7 +108,7 @@ export default function AdminProfile() {
   return (
     <div style={{ maxWidth: 1000 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="m-0">โปรไฟล์</h4>
+        <h4 className="m-0">Profile</h4>
         <Button onClick={onSave} disabled={saving}>
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </Button>
@@ -120,7 +120,7 @@ export default function AdminProfile() {
             {/* Slug input removed as it is auto-generated from username */}
 
             <Col md={6}>
-              <Form.Label>ชื่อแสดง</Form.Label>
+              <Form.Label>Display Name</Form.Label>
               <Form.Control
                 value={form.display_name || ""}
                 onChange={(e) => setForm((p) => ({ ...p, display_name: e.target.value }))}

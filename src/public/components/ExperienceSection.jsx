@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 
 const clip = (v, n = 220) => {
@@ -17,7 +17,31 @@ const formatDate = (v) => {
     }
 };
 
+const toTime = (v) => {
+    if (!v) return null;
+    const t = new Date(v).getTime();
+    return Number.isFinite(t) ? t : null;
+};
+
 export default function ExperienceSection({ experiences }) {
+
+    const sortedExperiences = useMemo(() => {
+        const arr = Array.isArray(experiences) ? [...experiences] : [];
+
+        arr.sort((a, b) => {
+        const ta = toTime(a?.start_date);
+        const tb = toTime(b?.start_date);
+
+        if (ta === null && tb === null) return 0;
+        if (ta === null) return 1;
+        if (tb === null) return -1;
+
+        return tb - ta; // desc
+        });
+
+        return arr;
+    }, [experiences]);
+
     return (
         <motion.div
             className="lofi-box h-100" id="experience"
@@ -41,7 +65,7 @@ export default function ExperienceSection({ experiences }) {
             </div>
 
             <div className="d-flex flex-column gap-4 mt-4">
-                {experiences.map((exp, idx) => {
+                {sortedExperiences.map((exp, idx) => {
                     const title = String(exp.title || "").trim();
                     const company = String(exp.company_name || "").trim();
                     const metaBits = [
@@ -79,7 +103,7 @@ export default function ExperienceSection({ experiences }) {
                             }}
                             />
                             {/* Line */}
-                            {idx !== experiences.length - 1 && (
+                            {idx !== sortedExperiences.length - 1 && (
                             <div
                                 style={{
                                 position: "absolute",
@@ -94,7 +118,7 @@ export default function ExperienceSection({ experiences }) {
                         </div>
 
                         {/* Content */}
-                        <div style={{ flex: 1, minWidth: 0, paddingBottom: idx !== experiences.length - 1 ? "1.5rem" : 0 }}>
+                        <div style={{ flex: 1, minWidth: 0, paddingBottom: idx !== sortedExperiences.length - 1 ? "1.5rem" : 0 }}>
                             <div className="d-flex flex-wrap gap-2 align-items-baseline">
                             {title && <div className="fw-bold" style={{ color: "#332E2C" }}>{title}</div>}
                             {company && (

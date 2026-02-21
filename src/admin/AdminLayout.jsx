@@ -31,7 +31,7 @@ export default function AdminLayout() {
 
         <Nav className="flex-column gap-2">
           <Nav.Link as={NavLink} to="/admin/profile" className="btn btn-outline-secondary text-start">
-            โปรไฟล์
+            Profile
           </Nav.Link>
           <Nav.Link as={NavLink} to="/admin/links" className="btn btn-outline-secondary text-start">
             Links
@@ -62,10 +62,11 @@ export default function AdminLayout() {
           </Nav.Link>
         </Nav>
 
-
-
+        <Button variant="outline-info" className="w-100 mt-3" onClick={() => navigate(`/${localStorage.getItem("profile_slug")}`)}>
+          Your Profile
+        </Button>
         <Button variant="outline-danger" className="w-100 mt-3" onClick={logout}>
-          ออกจากระบบ
+          Log Out
         </Button>
       </div>
 

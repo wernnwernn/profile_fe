@@ -72,6 +72,9 @@ export default function AdminUsers() {
                     Add User
                 </Button>
             </Stack>
+            <p className="text-danger">
+                หน้านี้สำหรับผู้ดูแลระบบ จัดแสดงไว้เพื่อการสาธิตเท่านั้น(Demo) ไม่สามารถใช้งานได้ในสิทธิ์ของผู้ใช้งานทั่วไป
+            </p>
 
             {loading ? (
                 <div className="text-center py-5">

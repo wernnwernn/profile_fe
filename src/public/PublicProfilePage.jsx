@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Spinner, Container, Card, Button, Row } from "react-bootstrap";
+import { useParams, useNavigate  } from "react-router-dom";
+import { Spinner, Container, Card, Button, Row, Modal } from "react-bootstrap";
 import { motion } from "framer-motion";
 import { fetchPublicProfileFull } from "../services/publicApi";
 
@@ -20,9 +20,33 @@ const OWNER_ID = "wernnwernn";
 
 export default function PublicProfilePage({ isOwner = false }) {
   const params = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
+  const [showLoginNudge, setShowLoginNudge] = useState(false);
+  const [showFabTip, setShowFabTip] = useState(false);
+  const [isClickLoginNudge, setIsClickLoginNudge] = useState(false);
+
+  const openLogin = () => {
+    setShowLoginNudge(false);
+    navigate("admin/login");
+  };
+
+  useEffect(() => {
+    if (!isOwner) return;
+
+    const dismissed = sessionStorage.getItem("dismiss_build_profile_tip") && Number(sessionStorage.getItem("dismiss_build_profile_tip")) >= 3;
+    if (dismissed || isClickLoginNudge) return;
+
+    const t1 = setTimeout(() => setShowFabTip(true), 5000);   // โผล่หลัง 3 วิ
+    const t2 = setTimeout(() => setShowFabTip(false), 20000); // โชว์ 15 วิแล้วหายเอง
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isOwner, isClickLoginNudge]);
 
   useEffect(() => {
     let mounted = true;
@@ -111,7 +135,7 @@ export default function PublicProfilePage({ isOwner = false }) {
   const showSkills = !!showContent.skills && skills.length > 0;
   const showEducation = !!showContent.education && educations.length > 0;
   const showCertificates = !!showContent.certificates && certificates.length > 0;
-  const showContact = !!showContent.contact;
+  const showContact = !!showContent.contact && (links.length > 0 || !!profile.email_public || !!profile.phone_public || !!profile.location || !!profile.github_public);
 
   if (loading) {
     return (
@@ -148,25 +172,85 @@ export default function PublicProfilePage({ isOwner = false }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          <div className="fw-bold lofi-heading text-truncate" style={{ maxWidth: 220, fontSize: 18 }}>
-            {profile.display_name || "Profile"}
-          </div>
+        <motion.div
+          className="d-none d-md-block"
+          style={{
+            maxWidth: 360,
+            fontWeight: 900,
+            fontSize: "clamp(18px, 2.2vw, 26px)",
 
-          <div className="d-flex gap-2 align-items-center">
-            <div className="d-none d-md-flex gap-2">
-              {
-                [{ id: "top", label: "Profile" }]
-                  .concat(showExperience ? [{ id: "experience", label: "Experience" }] : [])
-                  .concat(showProjects ? [{ id: "projects", label: "Projects" }] : [])
-                  .concat(showSkills ? [{ id: "skills", label: "Skills" }] : [])
-                  .concat(showContact ? [{ id: "contact", label: "Contact" }] : [])
-                  .map((x) => (
-                    <a key={x.id} href={x.id === "top" ? "#" : `#${x.id}`} className="lofi-pill text-decoration-none">
-                      {x.label}
-                    </a>
-                  ))}
-            </div>
-          </div>
+            lineHeight: 1.2,
+            paddingTop: 2,
+            paddingBottom: 2,
+            display: "inline-block",
+
+            letterSpacing: -0.4,
+            fontFamily:
+              '"ui-rounded", "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+
+            backgroundImage:
+              "linear-gradient(90deg, #DF8976 0%, #E59A88 45%, #F2B07A 80%, #DF8976 100%)",
+            backgroundSize: "220% 100%",
+            backgroundPosition: "0% 50%",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+            WebkitTextFillColor: "transparent",
+            transform: "translateZ(0)",
+          }}
+          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          whileHover={{
+            transition: { duration: 0.1 },
+          }}
+        >
+          {profile.display_name || "Profile"}
+        </motion.div>
+
+        <motion.div
+          className="d-flex gap-2 align-items-center flex-nowrap ps-1"
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: {},
+            show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+          }}
+          style={{
+            overflowX: "auto",
+            overflowY: "visible",
+            paddingTop: 5,
+            paddingBottom: 5,
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+          }}
+        >
+        {[
+          { id: "top", label: "Profile" },
+          ...(showExperience ? [{ id: "experience", label: "Experience" }] : []),
+          ...(showProjects ? [{ id: "projects", label: "Projects" }] : []),
+          ...(showSkills ? [{ id: "skills", label: "Skills" }] : []),
+          ...(showContact ? [{ id: "contact", label: "Contact" }] : []),
+        ].map((x) => (
+          <motion.a
+            key={x.id}
+            href={x.id === "top" ? "#" : `#${x.id}`}
+            className={[
+              "lofi-pill text-decoration-none",
+              x.id === "contact" ? "d-none d-md-inline-flex" : "",
+            ].join(" ")}
+            variants={{
+              hidden: { opacity: 0, y: -6, scale: 0.98 },
+              show: { opacity: 1, y: 0, scale: 1 },
+            }}
+            whileHover={{ y: -2, scale: 1.03, boxShadow: "0 2px 1px rgba(223, 137, 118, 0.65)" }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            style={{ whiteSpace: "nowrap", flex: "0 0 auto" }}
+          >
+            {x.label}
+          </motion.a>
+        ))}
+          </motion.div>
         </motion.div>
 
         {/* Hero */}
@@ -214,6 +298,117 @@ export default function PublicProfilePage({ isOwner = false }) {
         {/* Contact Final Box */}
         {showContact && <ContactSection profile={profile} links={links} />}
       </Container>
+
+
+      {isOwner && (
+        <>
+          {/* Floating icon */}
+          <motion.button
+            type="button"
+            className="owner-login-fab"
+            onClick={() =>{ 
+                setShowLoginNudge(true);
+                setShowFabTip(false);
+                setIsClickLoginNudge(true);
+              }}
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            aria-label="Build your profile"
+            title="Build your profile"
+          >
+            <span className="owner-login-fab-dot" />
+            <span className="owner-login-fab-icon">✨</span>
+          </motion.button>
+
+          {/* Small modal */}
+          <Modal
+            show={showLoginNudge}
+            onHide={() => setShowLoginNudge(false)}
+            centered
+            size="sm"
+            contentClassName="owner-login-modal"
+          >
+            <Modal.Body className="p-4">
+              <div className="d-flex align-items-start justify-content-between gap-3">
+                <div style={{ paddingRight: 6 }}>
+                  <div
+                    className="fw-bold lofi-heading"
+                    style={{ fontSize: 17, lineHeight: 1.25 }}
+                  >
+                    Build your profile (DEMO)
+                  </div>
+                  <div
+                    className="text-secondary mt-2"
+                    style={{ fontSize: 13.5, lineHeight: 1.5, color: "#5D5452" }}
+                  >
+                    Log in to edit, update, and publish your profile. 
+                  </div>
+                </div>
+
+                <Button
+                  variant="light"
+                  onClick={() => setShowLoginNudge(false)}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 999,
+                    padding: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  aria-label="Close"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="d-flex gap-2 mt-4 flex-wrap">
+                <Button
+                  className="lofi-button-primary flex-fill"
+                  style={{ minWidth: 140, borderRadius: 999, padding: "8px 12px" }}
+                  size="sm"
+                  onClick={openLogin}
+                >
+                  Go to Login
+                </Button>
+
+                <Button
+                  variant="outline-dark"
+                  size="sm"
+                  className="flex-fill"
+                  style={{ minWidth: 120, borderRadius: 999, padding: "8px 12px" }}
+                  onClick={() => setShowLoginNudge(false)}
+                >
+                  Later
+                </Button>
+              </div>
+            </Modal.Body>
+          </Modal>
+        </>
+      )}
+
+      {showFabTip && (
+        <motion.div
+          className="owner-fab-tip"
+          initial={{ opacity: 0, y: 6, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 6, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 420, damping: 28 }}
+          onClick={() => {
+            setShowFabTip(false);
+            const existing = sessionStorage.getItem("dismiss_build_profile_tip");
+            sessionStorage.setItem("dismiss_build_profile_tip", existing ? String(Number(existing) + 1) : "1");
+          }}
+        >
+
+          <div className="owner-fab-tip-title">Let’s build profile</div>
+          <div className="owner-fab-tip-sub">Log in to edit demo profile.</div>
+        </motion.div>
+      )}
     </div>
   );
 }
