@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
+  // Badge,
   Button,
   Card,
   Col,
@@ -16,15 +16,15 @@ import {
   addProjectMedia,
   createProject,
   deleteProject,
-  deleteProjectMedia,
+  // deleteProjectMedia,
   listProjects,
-  reorderProjectMedias,
+  // reorderProjectMedias,
   reorderProjects,
-  setProjectTags,
+  // setProjectTags,
   updateProject,
-  updateProjectMedia,
+  // updateProjectMedia,
 } from "../../services/cms/projectsApi";
-import { listTags } from "../../services/cms/tagsApi";
+// import { listTags } from "../../services/cms/tagsApi";
 import { useNotify } from "../../ui/NotificationProvider";
 import MediaPickerModal from "../components/MediaPickerModal";
 
@@ -54,7 +54,7 @@ export default function AdminProjects() {
   const notify = useNotify();
 
   const [projects, setProjects] = useState([]);
-  const [allTags, setAllTags] = useState([]);
+  // const [allTags, setAllTags] = useState([]);
 
   // create modal
   const [showCreate, setShowCreate] = useState(false);
@@ -92,8 +92,14 @@ export default function AdminProjects() {
   const fetchData = useMemo(() => async () => {
     setLoading(true);
     try {
-      const [ps, ts] = await Promise.all([listProjects(), listTags()]);
-      setAllTags(ts);
+      const [
+        ps, 
+        // ts
+      ] = await Promise.all([
+        listProjects(), 
+        // listTags()
+      ]);
+      // setAllTags(ts);
       setProjects(
         (ps || []).map((p) => ({
           ...p,
@@ -217,25 +223,25 @@ export default function AdminProjects() {
   };
 
   // ---------- tags ----------
-  const toggleTag = async (projectId, tagId) => {
-    setSaving(true);
-    try {
-      const p = projects.find((x) => x.id === projectId);
-      if (!p) return;
-      const currentIds = new Set((p.tags || []).map((t) => Number(t.id)));
-      if (currentIds.has(tagId)) currentIds.delete(tagId);
-      else currentIds.add(tagId);
+  // const toggleTag = async (projectId, tagId) => {
+  //   setSaving(true);
+  //   try {
+  //     const p = projects.find((x) => x.id === projectId);
+  //     if (!p) return;
+  //     const currentIds = new Set((p.tags || []).map((t) => Number(t.id)));
+  //     if (currentIds.has(tagId)) currentIds.delete(tagId);
+  //     else currentIds.add(tagId);
 
-      const nextIds = Array.from(currentIds);
-      await setProjectTags(projectId, nextIds);
-      await fetchData();
-      notify.success("อัปเดต tags แล้ว");
-    } catch (e) {
-      notify.error(getErrMsg(e) || "อัปเดต tags ไม่สำเร็จ");
-    } finally {
-      setSaving(false);
-    }
-  };
+  //     const nextIds = Array.from(currentIds);
+  //     await setProjectTags(projectId, nextIds);
+  //     await fetchData();
+  //     notify.success("อัปเดต tags แล้ว");
+  //   } catch (e) {
+  //     notify.error(getErrMsg(e) || "อัปเดต tags ไม่สำเร็จ");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
   // ---------- media ----------
   const applyCoverMedia = async (projectId, mediaId) => {
@@ -279,57 +285,57 @@ export default function AdminProjects() {
     }
   };
 
-  const saveCaption = async (projectMediaId, caption) => {
-    setSaving(true);
-    try {
-      await updateProjectMedia(projectMediaId, { caption });
-      await fetchData();
-      notify.success("บันทึก caption แล้ว");
-    } catch (e) {
-      notify.error(getErrMsg(e) || "บันทึก caption ไม่สำเร็จ");
-    } finally {
-      setSaving(false);
-    }
-  };
+  // const saveCaption = async (projectMediaId, caption) => {
+  //   setSaving(true);
+  //   try {
+  //     await updateProjectMedia(projectMediaId, { caption });
+  //     await fetchData();
+  //     notify.success("บันทึก caption แล้ว");
+  //   } catch (e) {
+  //     notify.error(getErrMsg(e) || "บันทึก caption ไม่สำเร็จ");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
-  const removeGalleryMedia = async (projectMediaId) => {
-    if (!window.confirm("ลบรูปนี้ออกจาก project?")) return;
-    setSaving(true);
-    try {
-      await deleteProjectMedia(projectMediaId);
-      await fetchData();
-      notify.success("ลบแล้ว");
-    } catch (e) {
-      notify.error(getErrMsg(e) || "ลบไม่สำเร็จ");
-    } finally {
-      setSaving(false);
-    }
-  };
+  // const removeGalleryMedia = async (projectMediaId) => {
+  //   if (!window.confirm("ลบรูปนี้ออกจาก project?")) return;
+  //   setSaving(true);
+  //   try {
+  //     await deleteProjectMedia(projectMediaId);
+  //     await fetchData();
+  //     notify.success("ลบแล้ว");
+  //   } catch (e) {
+  //     notify.error(getErrMsg(e) || "ลบไม่สำเร็จ");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
-  const moveGalleryMedia = async (projectId, projectMediaId, dir) => {
-    const p = projects.find((x) => x.id === projectId);
-    if (!p) return;
-    const ms = [...(p.medias || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || (a.id ?? 0) - (b.id ?? 0));
-    const idx = ms.findIndex((x) => x.id === projectMediaId);
-    if (idx < 0) return;
-    const next = idx + dir;
-    if (next < 0 || next >= ms.length) return;
-    const tmp = ms[idx];
-    ms[idx] = ms[next];
-    ms[next] = tmp;
+  // const moveGalleryMedia = async (projectId, projectMediaId, dir) => {
+  //   const p = projects.find((x) => x.id === projectId);
+  //   if (!p) return;
+  //   const ms = [...(p.medias || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || (a.id ?? 0) - (b.id ?? 0));
+  //   const idx = ms.findIndex((x) => x.id === projectMediaId);
+  //   if (idx < 0) return;
+  //   const next = idx + dir;
+  //   if (next < 0 || next >= ms.length) return;
+  //   const tmp = ms[idx];
+  //   ms[idx] = ms[next];
+  //   ms[next] = tmp;
 
-    const orderedIds = ms.map((x) => x.id);
-    setSaving(true);
-    try {
-      await reorderProjectMedias(projectId, orderedIds);
-      await fetchData();
-    } catch (e) {
-      notify.error(getErrMsg(e) || "จัดลำดับรูปไม่สำเร็จ");
-      await fetchData();
-    } finally {
-      setSaving(false);
-    }
-  };
+  //   const orderedIds = ms.map((x) => x.id);
+  //   setSaving(true);
+  //   try {
+  //     await reorderProjectMedias(projectId, orderedIds);
+  //     await fetchData();
+  //   } catch (e) {
+  //     notify.error(getErrMsg(e) || "จัดลำดับรูปไม่สำเร็จ");
+  //     await fetchData();
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
   return (
     <div className="py-3">
@@ -360,7 +366,7 @@ export default function AdminProjects() {
         <Row xs={1} className="g-3">
           {sorted.map((p, i) => {
             const coverUrl = p.cover_media_id ? mediaUrl(p.cover_media_id) : "";
-            const tagIdSet = new Set((p.tags || []).map((t) => Number(t.id)));
+            // const tagIdSet = new Set((p.tags || []).map((t) => Number(t.id)));
             return (
               <Col key={p.id}>
                 <Card>
@@ -467,7 +473,7 @@ export default function AdminProjects() {
                         </Row>
 
                         {/* tags */}
-                        <hr className="my-4" />
+                        {/* <hr className="my-4" />
                         <div className="fw-semibold mb-2">Tags</div>
                         <div className="d-flex flex-wrap gap-2 mb-2">
                           {(p.tags || []).length === 0 ? <span className="text-secondary">ยังไม่มี</span> : null}
@@ -490,10 +496,10 @@ export default function AdminProjects() {
                               {t.name}
                             </Button>
                           ))}
-                        </div>
+                        </div> */}
 
                         {/* gallery */}
-                        <hr className="my-4" />
+                        {/* <hr className="my-4" />
                         <Stack direction="horizontal" className="mb-2" gap={2}>
                           <div className="fw-semibold">Gallery</div>
                           <div className="ms-auto" />
@@ -546,7 +552,7 @@ export default function AdminProjects() {
                                 );
                               })}
                           </Row>
-                        )}
+                        )} */}
                       </>
                     )}
                   </Card.Body>

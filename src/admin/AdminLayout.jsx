@@ -48,9 +48,10 @@ export default function AdminLayout() {
           <Nav.Link as={NavLink} to="/admin/certificates" className="btn btn-outline-secondary text-start">
             Certificates
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/admin/tags" className="btn btn-outline-secondary text-start">
+          {/* ปิดการใช้งาน */}
+          {/* <Nav.Link as={NavLink} to="/admin/tags" className="btn btn-outline-secondary text-start">
             Tags
-          </Nav.Link>
+          </Nav.Link> */}
           <Nav.Link as={NavLink} to="/admin/projects" className="btn btn-outline-secondary text-start">
             Projects
           </Nav.Link>
